@@ -1,0 +1,16 @@
+{
+  "name": "split-bill",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "serve -l 5173"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4",
+    "vitest": "^1.6.0"
+  }
+}
+

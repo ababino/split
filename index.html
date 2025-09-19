@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Split Budget</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; }
+    .container { max-width: 800px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 16px; font-size: 24px; }
+    .participants { border: 1px solid #ccc; border-radius: 8px; padding: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 160px 100px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .row.header { font-weight: 600; margin-bottom: 12px; }
+    input[type="text"], input[type="number"] { padding: 8px; border: 1px solid #bbb; border-radius: 6px; }
+    button { padding: 8px 12px; border: 1px solid #999; border-radius: 6px; background: #eee; cursor: pointer; }
+    button:hover { filter: brightness(0.98); }
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    #results { margin-top: 20px; padding: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    .transfer { padding: 6px 0; }
+    .empty { color: #777; }
+  </style>
+  <link rel="icon" href="data:,">
+  <meta name="description" content="Simple app to split a budget between friends.">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <main class="container">
+    <h1>Split Budget</h1>
+    <section class="participants">
+      <div class="row header">
+        <div>Name</div>
+        <div>Amount</div>
+        <div>Action</div>
+      </div>
+      <div id="rows"></div>
+      <div class="actions">
+        <button id="add">Add participant</button>
+        <button id="calculate">Calculate</button>
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="empty">Add participants and press Calculate.</div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.js"></script>
+  
+</body>
+</html>
+
