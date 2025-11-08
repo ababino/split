@@ -18,6 +18,42 @@ npm run dev
 
 Open `http://localhost:5173` in your browser.
 
+### Authentication (Login)
+
+This project includes an optional, minimal login screen enforced by a tiny Express server.
+
+- **Environment variables**:
+  - `DISABLE_AUTH`: Set to `true` to disable authentication entirely (default: authentication is enabled)
+  - `LOGIN_USERNAME`: Username required to sign in (default: `admin`)
+  - `LOGIN_PASSWORD`: Password required to sign in (default: `password`)
+  - `SESSION_SECRET`: Secret used to sign the auth cookie (default: `dev-secret-change`)
+  - `PORT` (optional): Server port (default `5173`)
+
+- **Run locally WITHOUT authentication**:
+
+```bash
+DISABLE_AUTH=true npm run dev
+```
+
+- **Run locally with auth enabled**:
+
+```bash
+LOGIN_USERNAME=admin \
+LOGIN_PASSWORD=secret \
+SESSION_SECRET='change-me' \
+npm run dev
+```
+
+Then open `http://localhost:5173` and log in. If env vars are not provided, the server defaults to `admin` / `password` (development only) and `SESSION_SECRET=dev-secret-change`.
+
+- **Public routes**: `/login.html`, `/src/login.js`
+- **Auth API**:
+  - `POST /api/login` with JSON body `{ "username": "...", "password": "..." }`
+    - On success: `204 No Content` + sets a signed cookie
+    - On failure: `401 { error: "invalid_credentials" }`
+  - `POST /api/logout` → `204 No Content` and clears cookie
+- **Protected content**: All other paths (including `/`) require the auth cookie and will redirect to `/login.html` if not authenticated.
+
 ### Usage
 
 - **Add participant**: Click the Add participant button to add a row.
@@ -101,9 +137,10 @@ sudo chown -R split:split /opt/split
 
 3) Create the unit file at `/etc/systemd/system/split.service`:
 
+For production with authentication:
 ```ini
 [Unit]
-Description=Split Budget static server
+Description=Split Budget server
 After=network.target
 
 [Service]
@@ -112,7 +149,31 @@ User=split
 Group=split
 WorkingDirectory=/opt/split
 Environment=NODE_ENV=production
-ExecStart=/opt/split/node_modules/.bin/serve -s -l 8080
+Environment=LOGIN_USERNAME=your_username
+Environment=LOGIN_PASSWORD=your_secure_password
+Environment=SESSION_SECRET=your_secure_random_secret
+ExecStart=/usr/bin/node /opt/split/server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Or for production without authentication:
+```ini
+[Unit]
+Description=Split Budget server
+After=network.target
+
+[Service]
+Type=simple
+User=split
+Group=split
+WorkingDirectory=/opt/split
+Environment=NODE_ENV=production
+Environment=DISABLE_AUTH=true
+ExecStart=/usr/bin/node /opt/split/server.js
 Restart=on-failure
 RestartSec=5
 
