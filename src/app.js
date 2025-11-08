@@ -85,20 +85,52 @@ calculateButton.addEventListener('click', async () => {
 
   const { transfers } = computeSettlement(participants);
 
+  // Calculate total and per-person amount
+  const totalAmount = participants.reduce((sum, p) => sum + p.amount, 0);
+  const perPersonAmount = totalAmount / participants.length;
+
   const wrapper = document.createElement('div');
+  
+  // Add summary section
+  const summary = document.createElement('div');
+  summary.className = 'summary';
+  
+  const totalDiv = document.createElement('div');
+  totalDiv.className = 'summary-item';
+  totalDiv.textContent = `Total Amount: $${totalAmount.toFixed(2)}`;
+  
+  const perPersonDiv = document.createElement('div');
+  perPersonDiv.className = 'summary-item';
+  perPersonDiv.textContent = `Amount per Person: $${perPersonAmount.toFixed(2)}`;
+  
+  summary.appendChild(totalDiv);
+  summary.appendChild(perPersonDiv);
+  wrapper.appendChild(summary);
+
+  // Add transfers section
+  const transfersDiv = document.createElement('div');
+  transfersDiv.className = 'transfers-section';
+  
   if (transfers.length === 0) {
     const d = document.createElement('div');
     d.className = 'empty';
     d.textContent = 'Everyone is settled. No transfers needed.';
-    wrapper.appendChild(d);
+    transfersDiv.appendChild(d);
   } else {
+    const transfersTitle = document.createElement('div');
+    transfersTitle.className = 'transfers-title';
+    transfersTitle.textContent = 'Transfers:';
+    transfersDiv.appendChild(transfersTitle);
+    
     for (const t of transfers) {
       const p = document.createElement('div');
       p.className = 'transfer';
       p.textContent = `${t.from} → ${t.to}: $${t.amount.toFixed(2)}`;
-      wrapper.appendChild(p);
+      transfersDiv.appendChild(p);
     }
   }
+  
+  wrapper.appendChild(transfersDiv);
   setResultsContent(wrapper);
 });
 

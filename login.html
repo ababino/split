@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root { color-scheme: light dark; --btn-bg: #2563eb; --btn-text: #ffffff; --btn-border: #1e40af; --btn-hover-bg: #1d4ed8; }
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; display: grid; place-items: center; min-height: 100vh; padding: 24px; }
+    .card { width: 100%; max-width: 380px; border: 1px solid #ccc; border-radius: 10px; padding: 20px; }
+    h1 { margin: 0 0 16px; font-size: 22px; text-align: center; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input { padding: 10px; border: 1px solid #bbb; border-radius: 8px; width: 100%; }
+    .field { margin-bottom: 12px; }
+    button { width: 100%; padding: 10px 12px; border: 1px solid var(--btn-border); border-radius: 8px; background: var(--btn-bg); color: var(--btn-text); cursor: pointer; }
+    button:hover { background: var(--btn-hover-bg); }
+    button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+    .error { margin-top: 10px; color: #dc2626; min-height: 20px; text-align: center; }
+  </style>
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <main class="card">
+    <h1>Login</h1>
+    <form id="login-form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit">Sign in</button>
+      <div id="error" class="error"></div>
+    </form>
+  </main>
+
+  <script type="module" src="./src/login.js"></script>
+</body>
+</html>
+
+
+
+
