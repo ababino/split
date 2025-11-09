@@ -6,10 +6,16 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "serve -l 5173"
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^4.19.2"
   },
   "devDependencies": {
     "serve": "^14.2.4",
-    "vitest": "^3.2.4"
+    "supertest": "^7.0.0",
+    "vitest": "^1.6.0"
   }
 }
