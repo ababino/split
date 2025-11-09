@@ -19,6 +19,10 @@ RUN_USER="$DEFAULT_USER"
 RUN_GROUP="$DEFAULT_GROUP"
 PORT="$DEFAULT_PORT"
 NODE_ENV_VALUE="$DEFAULT_NODE_ENV"
+DISABLE_AUTH=0
+LOGIN_USERNAME=""
+LOGIN_PASSWORD=""
+SESSION_SECRET=""
 ENABLE_SERVICE=1
 START_SERVICE=1
 
@@ -27,19 +31,29 @@ usage() {
 Usage: sudo bash scripts/install-systemd.sh [options]
 
 Options:
-  --install-dir PATH    Install directory (default: $DEFAULT_INSTALL_DIR)
-  --service-name NAME   systemd service name (default: $DEFAULT_SERVICE_NAME)
-  --user NAME           System user to run as (default: $DEFAULT_USER)
-  --group NAME          System group to run as (default: $DEFAULT_GROUP)
-  --port PORT           Port to serve on (default: $DEFAULT_PORT)
-  --node-env VALUE      NODE_ENV for service (default: $DEFAULT_NODE_ENV)
-  --no-enable           Do not enable service at boot
-  --no-start            Do not start service after install
-  -h, --help            Show this help
+  --install-dir PATH      Install directory (default: $DEFAULT_INSTALL_DIR)
+  --service-name NAME     systemd service name (default: $DEFAULT_SERVICE_NAME)
+  --user NAME             System user to run as (default: $DEFAULT_USER)
+  --group NAME            System group to run as (default: $DEFAULT_GROUP)
+  --port PORT             Port to serve on (default: $DEFAULT_PORT)
+  --node-env VALUE        NODE_ENV for service (default: $DEFAULT_NODE_ENV)
+  --disable-auth          Disable authentication (sets DISABLE_AUTH=true)
+  --login-username USER   Username for authentication (requires auth enabled)
+  --login-password PASS   Password for authentication (requires auth enabled)
+  --session-secret SECRET Session secret for authentication (requires auth enabled)
+  --no-enable             Do not enable service at boot
+  --no-start              Do not start service after install
+  -h, --help              Show this help
 
-Example:
+Example (with authentication):
   sudo bash scripts/install-systemd.sh \
-    --install-dir /opt/split --service-name split --user split --group split --port 8080
+    --install-dir /opt/split --service-name split --user split --group split --port 8080 \
+    --login-username admin --login-password secret --session-secret change-me
+
+Example (without authentication):
+  sudo bash scripts/install-systemd.sh \
+    --install-dir /opt/split --service-name split --user split --group split --port 8080 \
+    --disable-auth
 EOF
 }
 
@@ -84,6 +98,10 @@ while [[ $# -gt 0 ]]; do
     --group) RUN_GROUP="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
     --node-env) NODE_ENV_VALUE="$2"; shift 2 ;;
+    --disable-auth) DISABLE_AUTH=1; shift ;;
+    --login-username) LOGIN_USERNAME="$2"; shift 2 ;;
+    --login-password) LOGIN_PASSWORD="$2"; shift 2 ;;
+    --session-secret) SESSION_SECRET="$2"; shift 2 ;;
     --no-enable) ENABLE_SERVICE=0; shift ;;
     --no-start) START_SERVICE=0; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -120,9 +138,33 @@ chown -R "$RUN_USER":"$RUN_GROUP" "$INSTALL_DIR"
 # Write systemd unit
 UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
 echo "==> Writing systemd unit to $UNIT_PATH"
+
+# Build environment variables section
+ENV_VARS="Environment=NODE_ENV=${NODE_ENV_VALUE}
+Environment=PORT=${PORT}"
+
+if [[ "$DISABLE_AUTH" == "1" ]]; then
+  ENV_VARS="${ENV_VARS}
+Environment=DISABLE_AUTH=true"
+else
+  # Add auth credentials if provided
+  if [[ -n "$LOGIN_USERNAME" ]]; then
+    ENV_VARS="${ENV_VARS}
+Environment=LOGIN_USERNAME=${LOGIN_USERNAME}"
+  fi
+  if [[ -n "$LOGIN_PASSWORD" ]]; then
+    ENV_VARS="${ENV_VARS}
+Environment=LOGIN_PASSWORD=${LOGIN_PASSWORD}"
+  fi
+  if [[ -n "$SESSION_SECRET" ]]; then
+    ENV_VARS="${ENV_VARS}
+Environment=SESSION_SECRET=${SESSION_SECRET}"
+  fi
+fi
+
 cat > "$UNIT_PATH" <<UNIT
 [Unit]
-Description=Split Budget static server
+Description=Split Budget server
 After=network.target
 
 [Service]
@@ -130,8 +172,8 @@ Type=simple
 User=${RUN_USER}
 Group=${RUN_GROUP}
 WorkingDirectory=${INSTALL_DIR}
-Environment=NODE_ENV=${NODE_ENV_VALUE}
-ExecStart=${INSTALL_DIR}/node_modules/.bin/serve -s -l ${PORT}
+${ENV_VARS}
+ExecStart=/usr/bin/node ${INSTALL_DIR}/server.js
 Restart=on-failure
 RestartSec=5
 
