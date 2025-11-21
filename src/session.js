@@ -308,9 +308,10 @@ async function loadSession() {
     sessionIdDisplay.textContent = sessionId;
     updateSessionStatus();
     
-    // Load participants
-    loadParticipantsIntoUI(data.participants || []);
-    lastSaveHash = getDataHash(data.participants || []);
+    // Load participants - data.data.participants because API returns nested structure
+    const participants = data.data?.participants || [];
+    loadParticipantsIntoUI(participants);
+    lastSaveHash = getDataHash(participants);
     
     // Show the session container
     loadingDiv.style.display = 'none';
@@ -361,13 +362,14 @@ async function pollForUpdates() {
     sessionData = data;
     updateSessionStatus();
     
-    // Check if data changed (from another user)
-    const serverHash = getDataHash(data.participants || []);
+    // Check if data changed (from another user) - data.data.participants because API returns nested structure
+    const serverParticipants = data.data?.participants || [];
+    const serverHash = getDataHash(serverParticipants);
     const currentHash = getDataHash(getParticipantsFromUI());
     
     if (serverHash !== currentHash && serverHash !== lastSaveHash) {
       // Data changed externally, reload UI
-      loadParticipantsIntoUI(data.participants || []);
+      loadParticipantsIntoUI(serverParticipants);
       lastSaveHash = serverHash;
       
       // Re-calculate if there are results showing
