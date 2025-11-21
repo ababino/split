@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session - Split Budget</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root { 
+      color-scheme: light dark; 
+      --btn-bg: #2563eb; 
+      --btn-text: #ffffff; 
+      --btn-border: #1e40af; 
+      --btn-hover-bg: #1d4ed8; 
+      --danger-bg: #dc2626; 
+      --danger-border: #b91c1c; 
+      --danger-hover-bg: #b91c1c; 
+    }
+    body { 
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; 
+      margin: 0; 
+    }
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 24px; 
+    }
+    .header {
+      margin-bottom: 20px;
+    }
+    h1 { 
+      margin: 0 0 8px; 
+      font-size: 24px; 
+    }
+    .session-info {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    .session-id {
+      font-family: 'Courier New', monospace;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .status-indicator {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .status-indicator.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-indicator.warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-indicator.expired {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .save-status {
+      font-size: 13px;
+      color: #6b7280;
+      font-style: italic;
+    }
+    .save-status.saving {
+      color: #f59e0b;
+    }
+    .save-status.saved {
+      color: #16a34a;
+    }
+    .save-status.error {
+      color: #dc2626;
+    }
+    .participants { 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+      padding: 16px; 
+      background: white;
+    }
+    .row { 
+      display: grid; 
+      grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 0.6fr) auto; 
+      gap: 8px; 
+      align-items: center; 
+      margin-bottom: 8px; 
+    }
+    .row > * { min-width: 0; }
+    .row.header { 
+      font-weight: 600; 
+      margin-bottom: 12px; 
+    }
+    input[type="text"], input[type="number"] { 
+      padding: 8px; 
+      border: 1px solid #bbb; 
+      border-radius: 6px; 
+      width: 100%; 
+    }
+    input:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
+    button { 
+      padding: 8px 12px; 
+      border: 1px solid var(--btn-border); 
+      border-radius: 6px; 
+      background: var(--btn-bg); 
+      color: var(--btn-text); 
+      cursor: pointer; 
+    }
+    button:hover { background: var(--btn-hover-bg); }
+    button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .row button { 
+      border-color: var(--danger-border); 
+      background: var(--danger-bg); 
+      color: #fff; 
+    }
+    .row button:hover { background: var(--danger-hover-bg); }
+    .actions { 
+      display: flex; 
+      gap: 8px; 
+      margin-top: 12px; 
+    }
+    #results { 
+      margin-top: 20px; 
+      padding: 16px; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+      background: white;
+    }
+    .summary { 
+      margin-bottom: 16px; 
+      padding-bottom: 16px; 
+      border-bottom: 2px solid #ddd; 
+    }
+    .summary-item { 
+      padding: 6px 0; 
+      font-weight: 600; 
+      font-size: 16px; 
+    }
+    .transfers-section { margin-top: 8px; }
+    .transfers-title { 
+      font-weight: 600; 
+      margin-bottom: 8px; 
+    }
+    .transfer { padding: 6px 0; }
+    .empty { color: #777; }
+    .error-banner {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .error-banner h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .error-banner p {
+      margin: 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+    @media (prefers-color-scheme: dark) {
+      .participants, #results {
+        background: #1f2937;
+        border-color: #374151;
+      }
+      .session-id {
+        background: #374151;
+      }
+      input:disabled {
+        background: #374151;
+      }
+    }
+    @media (max-width: 480px) {
+      button { padding: 6px 8px; }
+      .session-info {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+  <link rel="icon" href="data:,">
+  <meta name="description" content="Collaborative split budget session">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <main class="container">
+    <div id="loading" class="loading">Loading session...</div>
+    <div id="error-container"></div>
+    <div id="session-container" style="display: none;">
+      <div class="header">
+        <h1>Split Budget Session</h1>
+        <div class="session-info">
+          <div>Session: <span class="session-id" id="session-id"></span></div>
+          <div id="session-status"></div>
+          <div id="save-status" class="save-status"></div>
+        </div>
+      </div>
+      
+      <section class="participants">
+        <div class="row header">
+          <div>Name</div>
+          <div>Amount</div>
+          <div>Action</div>
+        </div>
+        <div id="rows"></div>
+        <div class="actions">
+          <button id="add">Add participant</button>
+          <button id="calculate">Calculate</button>
+        </div>
+      </section>
+
+      <section id="results">
+        <div class="empty">Add participants and press Calculate.</div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="./src/session.js"></script>
+</body>
+</html>
+

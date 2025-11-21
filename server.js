@@ -262,6 +262,31 @@ app.get('/src/login.js', (req, res) => {
   res.sendFile(path.join(publicDir, 'src', 'login.js'));
 });
 
+// Serve session view page publicly (no auth required)
+app.get('/session/:sessionId', (req, res) => {
+  res.sendFile(path.join(publicDir, 'session.html'));
+});
+app.get('/src/session.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(publicDir, 'src', 'session.js'));
+});
+app.get('/src/split.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(publicDir, 'src', 'split.js'));
+});
+
+// Serve sessions management page (requires auth)
+app.get('/sessions.html', AUTH_ENABLED ? requireAuth : (req, res, next) => next(), (req, res) => {
+  res.sendFile(path.join(publicDir, 'sessions.html'));
+});
+app.get('/sessions', AUTH_ENABLED ? requireAuth : (req, res, next) => next(), (req, res) => {
+  res.sendFile(path.join(publicDir, 'sessions.html'));
+});
+app.get('/src/sessions.js', AUTH_ENABLED ? requireAuth : (req, res, next) => next(), (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(publicDir, 'src', 'sessions.js'));
+});
+
 // Conditionally protect static assets based on AUTH_ENABLED
 if (AUTH_ENABLED) {
   app.use(requireAuth, express.static(publicDir));

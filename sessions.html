@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Sessions - Split Budget</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root { 
+      color-scheme: light dark; 
+      --btn-bg: #2563eb; 
+      --btn-text: #ffffff; 
+      --btn-border: #1e40af; 
+      --btn-hover-bg: #1d4ed8; 
+      --danger-bg: #dc2626; 
+      --danger-border: #b91c1c; 
+      --danger-hover-bg: #b91c1c;
+      --success-bg: #16a34a;
+      --success-border: #15803d;
+      --success-hover-bg: #15803d;
+      --warning-bg: #f59e0b;
+      --warning-border: #d97706;
+      --warning-hover-bg: #d97706;
+    }
+    body { 
+      font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; 
+      margin: 0; 
+    }
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 24px; 
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    h1 { 
+      margin: 0; 
+      font-size: 28px; 
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    button { 
+      padding: 8px 16px; 
+      border: 1px solid var(--btn-border); 
+      border-radius: 6px; 
+      background: var(--btn-bg); 
+      color: var(--btn-text); 
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: var(--btn-hover-bg); }
+    button:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.danger {
+      border-color: var(--danger-border);
+      background: var(--danger-bg);
+    }
+    button.danger:hover {
+      background: var(--danger-hover-bg);
+    }
+    button.success {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+    }
+    button.success:hover {
+      background: var(--success-hover-bg);
+    }
+    button.warning {
+      border-color: var(--warning-border);
+      background: var(--warning-bg);
+    }
+    button.warning:hover {
+      background: var(--warning-hover-bg);
+    }
+    button.secondary {
+      background: #6b7280;
+      border-color: #4b5563;
+    }
+    button.secondary:hover {
+      background: #4b5563;
+    }
+    .sessions-container {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .session-card {
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+      background: white;
+    }
+    .session-card:last-child {
+      border-bottom: none;
+    }
+    .session-card.expired {
+      background: #fef2f2;
+      opacity: 0.8;
+    }
+    .session-card.disabled {
+      background: #f9fafb;
+      opacity: 0.7;
+    }
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .session-info {
+      flex: 1;
+    }
+    .session-id {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-family: 'Courier New', monospace;
+    }
+    .session-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .session-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-badge.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge.expired {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .status-badge.disabled {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .session-url {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      padding: 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+    }
+    .session-url input {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      background: white;
+    }
+    .session-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .session-actions button {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+    .empty-state h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .empty-state p {
+      margin-bottom: 20px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .session-card {
+        background: #1f2937;
+        border-bottom-color: #374151;
+      }
+      .session-card.expired {
+        background: #3f1f1f;
+      }
+      .session-card.disabled {
+        background: #111827;
+      }
+      .session-url {
+        background: #111827;
+      }
+      .session-url input {
+        background: #1f2937;
+        border-color: #4b5563;
+        color: #f3f4f6;
+      }
+    }
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        align-items: start;
+        gap: 12px;
+      }
+      .session-header {
+        flex-direction: column;
+      }
+      .session-actions {
+        width: 100%;
+      }
+      .session-actions button {
+        flex: 1;
+      }
+    }
+  </style>
+  <link rel="icon" href="data:,">
+  <meta name="description" content="Manage your split budget sessions">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <main class="container">
+    <div class="header">
+      <h1>My Sessions</h1>
+      <div class="nav-buttons">
+        <button id="home-btn" class="secondary">← Back to App</button>
+        <button id="create-session-btn" class="success">+ Create New Session</button>
+      </div>
+    </div>
+
+    <div id="error-container"></div>
+    <div id="loading" class="loading">Loading sessions...</div>
+    <div id="sessions-list" style="display: none;"></div>
+  </main>
+
+  <script type="module" src="./src/sessions.js"></script>
+</body>
+</html>
+

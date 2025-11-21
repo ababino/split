@@ -4,6 +4,9 @@ const rowsContainer = document.getElementById('rows');
 const addButton = document.getElementById('add');
 const calculateButton = document.getElementById('calculate');
 const resultsContainer = document.getElementById('results');
+const sessionActionsContainer = document.getElementById('session-actions');
+const mySessionsBtn = document.getElementById('my-sessions-btn');
+const createSessionBtn = document.getElementById('create-session-btn');
 
 function createRow(initialName = '', initialAmount = '') {
   const row = document.createElement('div');
@@ -68,9 +71,65 @@ function showMessage(text) {
   setResultsContent(div);
 }
 
+// Check authentication status and show session actions if authenticated
+async function checkAuthAndShowSessionActions() {
+  try {
+    const response = await fetch('/api/auth/status');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.authenticated) {
+        sessionActionsContainer.style.display = 'flex';
+      }
+    }
+  } catch (error) {
+    // If auth status check fails, just don't show the buttons
+    console.error('Failed to check auth status:', error);
+  }
+}
+
+// Session management handlers
+if (mySessionsBtn) {
+  mySessionsBtn.addEventListener('click', () => {
+    window.location.href = '/sessions';
+  });
+}
+
+if (createSessionBtn) {
+  createSessionBtn.addEventListener('click', async () => {
+    try {
+      createSessionBtn.disabled = true;
+      createSessionBtn.textContent = 'Creating...';
+      
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to the session management page
+        window.location.href = '/sessions';
+      } else {
+        alert('Failed to create session. Please try again.');
+        createSessionBtn.disabled = false;
+        createSessionBtn.textContent = 'Create Session';
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
+      alert('Failed to create session. Please try again.');
+      createSessionBtn.disabled = false;
+      createSessionBtn.textContent = 'Create Session';
+    }
+  });
+}
+
 // Initialize with a couple of rows for convenience
 addEmptyRow();
 addEmptyRow();
+
+// Check auth status on page load
+checkAuthAndShowSessionActions();
 
 addButton.addEventListener('click', () => {
   rowsContainer.appendChild(createRow());

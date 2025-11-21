@@ -38,7 +38,13 @@
 </head>
 <body>
   <main class="container">
-    <h1>Split Budget</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h1 style="margin: 0;">Split Budget</h1>
+      <div id="session-actions" style="display: none; gap: 8px;">
+        <button id="my-sessions-btn">My Sessions</button>
+        <button id="create-session-btn">Create Session</button>
+      </div>
+    </div>
     <section class="participants">
       <div class="row header">
         <div>Name</div>
