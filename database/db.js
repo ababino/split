@@ -143,7 +143,7 @@ export function listSessionsByOwner(ownerId) {
     SELECT id, owner_id, name, created_at, expires_at, is_active, data
     FROM sessions
     WHERE owner_id = ?
-    ORDER BY created_at DESC
+    ORDER BY created_at DESC, id DESC
   `);
   
   const rows = stmt.all(ownerId);

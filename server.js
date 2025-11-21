@@ -87,6 +87,11 @@ app.post('/api/logout', (req, res) => {
   res.status(204).end();
 });
 
+app.get('/api/auth/status', (req, res) => {
+  const authenticated = isAuthenticated(req);
+  return res.json({ authenticated });
+});
+
 // Helper to get username from request
 function getUsername(req) {
   // In a real app, this would extract from JWT or session
