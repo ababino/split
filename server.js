@@ -29,13 +29,15 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change';
 const PORT = Number(process.env.PORT || 5173);
 const DEFAULT_SESSION_DURATION_HOURS = Number(process.env.DEFAULT_SESSION_DURATION_HOURS || 24);
 const MAX_SESSION_DURATION_HOURS = Number(process.env.MAX_SESSION_DURATION_HOURS || 168);
+const SESSION_CLEANUP_INTERVAL_HOURS = Number(process.env.SESSION_CLEANUP_INTERVAL_HOURS || 1);
 
 // Initialize database
 if (process.env.NODE_ENV !== 'test') {
   initDatabase();
   
-  // Setup periodic cleanup of expired sessions (every hour)
-  const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+  // Setup periodic cleanup of expired sessions
+  const CLEANUP_INTERVAL = SESSION_CLEANUP_INTERVAL_HOURS * 60 * 60 * 1000;
+  console.log(`Session cleanup will run every ${SESSION_CLEANUP_INTERVAL_HOURS} hour(s)`);
   setInterval(() => {
     const deleted = cleanupExpiredSessions();
     if (deleted > 0) {

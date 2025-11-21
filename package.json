@@ -6,7 +6,14 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "serve -l 5173"
+    "dev": "serve -l 5173",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "serve": "^14.2.4",

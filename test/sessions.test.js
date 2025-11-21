@@ -107,8 +107,10 @@ describe('Database Layer - Sessions', () => {
   });
 
   describe('listSessionsByOwner', () => {
-    it('lists all sessions for an owner', () => {
+    it('lists all sessions for an owner', async () => {
       const session1 = createSession('user1', 'Session 1');
+      // Small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10));
       const session2 = createSession('user1', 'Session 2');
       createSession('user2', 'Session 3');
       
