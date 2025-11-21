@@ -12,13 +12,27 @@ Now with **collaborative sessions** - create shareable sessions that multiple pe
 npm install
 ```
 
-- **Run locally** (serves `index.html`):
+- **Run the backend server** (with authentication and sessions):
+
+```bash
+npm start
+```
+
+Open `http://localhost:5173` in your browser and log in with the default credentials (`admin` / `password`).
+
+**Alternative:** For frontend-only development (no backend, no auth, no sessions):
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+**Note:** Use `npm start` for the full application experience. The `npm run dev` command is only for static file serving during frontend development.
+
+**Command Reference:**
+- `npm start` → Full backend server (Express) with auth, sessions, and API
+- `npm run dev` → Static file server only (no backend features)
+- `npm test` → Run test suite
+- `npm run test:watch` → Run tests in watch mode
 
 ### Authentication (Login)
 
@@ -37,16 +51,16 @@ This project includes an optional, minimal login screen enforced by a tiny Expre
 - **Run locally WITHOUT authentication**:
 
 ```bash
-DISABLE_AUTH=true npm run dev
+DISABLE_AUTH=true npm start
 ```
 
-- **Run locally with auth enabled**:
+- **Run locally with custom credentials**:
 
 ```bash
 LOGIN_USERNAME=admin \
 LOGIN_PASSWORD=secret \
 SESSION_SECRET='change-me' \
-npm run dev
+npm start
 ```
 
 Then open `http://localhost:5173` and log in. If env vars are not provided, the server defaults to `admin` / `password` (development only) and `SESSION_SECRET=dev-secret-change`.
@@ -83,12 +97,24 @@ Create shareable budget sessions that anyone can access without authentication:
 - Source code lives in `src/`.
 - UI logic is in `src/app.js` (DOM + events).
 - Splitting algorithm utilities are in `src/split.js`.
+- Backend server is in `server.js` (Express + API endpoints).
+- Database layer is in `database/db.js`.
 
-Run a local server:
+**Run the full backend server** (recommended):
+
+```bash
+npm start
+```
+
+This starts the Express server with authentication, session management, and all API endpoints on port 5173.
+
+**Run static file server only** (frontend development without backend):
 
 ```bash
 npm run dev
 ```
+
+This serves static files only - no backend, no authentication, no session APIs.
 
 ### Sessions Feature
 
