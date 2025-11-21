@@ -1,4 +1,4 @@
--- Sessions table for storing shared split budget sessions
+-- Sessions table
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   data TEXT NOT NULL DEFAULT '{"participants":[]}'
 );
 
--- Index for faster owner queries
-CREATE INDEX IF NOT EXISTS idx_sessions_owner_id ON sessions(owner_id);
+-- Index for querying sessions by owner
+CREATE INDEX IF NOT EXISTS idx_sessions_owner ON sessions(owner_id);
 
--- Index for faster expiration queries
+-- Index for cleanup queries
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 

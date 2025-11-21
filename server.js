@@ -3,6 +3,18 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
+import {
+  initDatabase,
+  createSession,
+  getSession,
+  updateSession,
+  listSessionsByOwner,
+  deleteSession,
+  toggleSessionStatus,
+  extendSessionExpiration,
+  cleanupExpiredSessions,
+  isSessionAccessible
+} from './database/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +27,22 @@ const USERNAME = process.env.LOGIN_USERNAME || 'admin';
 const PASSWORD = process.env.LOGIN_PASSWORD || 'password';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change';
 const PORT = Number(process.env.PORT || 5173);
+const DEFAULT_SESSION_DURATION_HOURS = Number(process.env.DEFAULT_SESSION_DURATION_HOURS || 24);
+const MAX_SESSION_DURATION_HOURS = Number(process.env.MAX_SESSION_DURATION_HOURS || 168);
+
+// Initialize database
+if (process.env.NODE_ENV !== 'test') {
+  initDatabase();
+  
+  // Setup periodic cleanup of expired sessions (every hour)
+  const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+  setInterval(() => {
+    const deleted = cleanupExpiredSessions();
+    if (deleted > 0) {
+      console.log(`Cleaned up ${deleted} expired session(s)`);
+    }
+  }, CLEANUP_INTERVAL);
+}
 
 // Middleware
 app.use(cookieParser(SESSION_SECRET));
@@ -57,6 +85,169 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie('auth');
   res.status(204).end();
+});
+
+// Helper to get username from request
+function getUsername(req) {
+  // In a real app, this would extract from JWT or session
+  // For now, we use a simple header or default to the configured username
+  return req.headers['x-username'] || USERNAME;
+}
+
+// ===== Session API Endpoints =====
+
+// 1. Create a new session (Protected)
+app.post('/api/sessions', requireAuth, (req, res) => {
+  try {
+    const { name, expirationHours } = req.body || {};
+    const ownerId = getUsername(req);
+    
+    // Validate expiration hours
+    let hours = expirationHours || DEFAULT_SESSION_DURATION_HOURS;
+    if (hours > MAX_SESSION_DURATION_HOURS) {
+      hours = MAX_SESSION_DURATION_HOURS;
+    }
+    
+    const session = createSession(ownerId, name, hours);
+    
+    return res.status(201).json({
+      sessionId: session.id,
+      url: session.url,
+      expiresAt: session.expiresAt
+    });
+  } catch (error) {
+    console.error('Error creating session:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
+});
+
+// 2. List all sessions for authenticated user (Protected)
+app.get('/api/sessions', requireAuth, (req, res) => {
+  try {
+    const ownerId = getUsername(req);
+    const sessions = listSessionsByOwner(ownerId);
+    
+    return res.json({ sessions });
+  } catch (error) {
+    console.error('Error listing sessions:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
+});
+
+// 3. Update session status or expiration (Protected)
+app.patch('/api/sessions/:sessionId', requireAuth, (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { isActive, extendHours } = req.body || {};
+    const ownerId = getUsername(req);
+    
+    // Check if session exists and belongs to user
+    const session = getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'session_not_found' });
+    }
+    if (session.ownerId !== ownerId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    
+    // Update active status if provided
+    if (typeof isActive === 'boolean') {
+      const success = toggleSessionStatus(sessionId, ownerId, isActive);
+      if (!success) {
+        return res.status(500).json({ error: 'update_failed' });
+      }
+    }
+    
+    // Extend expiration if requested
+    if (extendHours && extendHours > 0) {
+      const updated = extendSessionExpiration(sessionId, ownerId, extendHours);
+      if (!updated) {
+        return res.status(500).json({ error: 'extension_failed' });
+      }
+    }
+    
+    // Return updated session
+    const updatedSession = getSession(sessionId);
+    return res.json({ session: updatedSession });
+  } catch (error) {
+    console.error('Error updating session:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
+});
+
+// 4. Delete a session (Protected)
+app.delete('/api/sessions/:sessionId', requireAuth, (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const ownerId = getUsername(req);
+    
+    const success = deleteSession(sessionId, ownerId);
+    if (!success) {
+      return res.status(404).json({ error: 'session_not_found_or_forbidden' });
+    }
+    
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
+});
+
+// 5. Get session data (Public - no auth required)
+app.get('/api/sessions/:sessionId/data', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    // Check if session is accessible
+    if (!isSessionAccessible(sessionId)) {
+      return res.status(404).json({ error: 'session_not_found_or_expired' });
+    }
+    
+    const session = getSession(sessionId);
+    return res.json({
+      sessionId: session.id,
+      name: session.name,
+      expiresAt: session.expiresAt,
+      data: session.data
+    });
+  } catch (error) {
+    console.error('Error getting session data:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
+});
+
+// 6. Update session data (Public - no auth required)
+app.put('/api/sessions/:sessionId/data', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { participants } = req.body || {};
+    
+    // Check if session is accessible
+    if (!isSessionAccessible(sessionId)) {
+      return res.status(404).json({ error: 'session_not_found_or_expired' });
+    }
+    
+    // Validate participants data
+    if (!Array.isArray(participants)) {
+      return res.status(400).json({ error: 'invalid_participants_data' });
+    }
+    
+    // Update session data
+    const success = updateSession(sessionId, { participants });
+    if (!success) {
+      return res.status(500).json({ error: 'update_failed' });
+    }
+    
+    // Return updated session
+    const session = getSession(sessionId);
+    return res.json({
+      sessionId: session.id,
+      data: session.data
+    });
+  } catch (error) {
+    console.error('Error updating session data:', error);
+    return res.status(500).json({ error: 'internal_error' });
+  }
 });
 
 // Static files
