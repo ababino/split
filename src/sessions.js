@@ -229,16 +229,16 @@ function attachEventListeners() {
   // Copy URL buttons
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const sessionId = e.target.dataset.sessionId;
+      const sessionId = e.currentTarget.dataset.sessionId;
       const url = `${window.location.origin}/session/${sessionId}`;
-      await copyToClipboard(url, e.target);
+      await copyToClipboard(url, e.currentTarget);
     });
   });
   
   // Open session buttons
   document.querySelectorAll('.open-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const sessionId = e.target.dataset.sessionId;
+      const sessionId = e.currentTarget.dataset.sessionId;
       window.open(`/session/${sessionId}`, '_blank');
     });
   });
@@ -246,7 +246,7 @@ function attachEventListeners() {
   // Toggle status buttons
   document.querySelectorAll('.toggle-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const sessionId = e.target.dataset.sessionId;
+      const sessionId = e.currentTarget.dataset.sessionId;
       const session = sessions.find(s => s.id === sessionId);
       if (session) {
         await toggleSessionStatus(sessionId, !session.isActive);
@@ -257,7 +257,7 @@ function attachEventListeners() {
   // Extend expiration buttons
   document.querySelectorAll('.extend-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const sessionId = e.target.dataset.sessionId;
+      const sessionId = e.currentTarget.dataset.sessionId;
       await extendSession(sessionId);
     });
   });
@@ -265,7 +265,7 @@ function attachEventListeners() {
   // Delete buttons
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const sessionId = e.target.dataset.sessionId;
+      const sessionId = e.currentTarget.dataset.sessionId;
       await deleteSession(sessionId);
     });
   });
@@ -368,7 +368,7 @@ async function extendSession(sessionId) {
     const response = await fetch(`/api/sessions/${sessionId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ extend: 24 })
+      body: JSON.stringify({ extendHours: 24 })
     });
     
     if (!response.ok) {
