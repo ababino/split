@@ -1,4 +1,4 @@
-import { computeSettlement } from './split.js';
+import { computeSettlement } from '/src/split.js';
 
 // Get session ID from URL
 const pathParts = window.location.pathname.split('/');

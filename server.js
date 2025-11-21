@@ -215,6 +215,7 @@ app.get('/api/sessions/:sessionId/data', (req, res) => {
       sessionId: session.id,
       name: session.name,
       expiresAt: session.expiresAt,
+      isActive: session.isActive,
       data: session.data
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-import { computeSettlement } from './split.js';
+import { computeSettlement } from '/src/split.js';
 
 const rowsContainer = document.getElementById('rows');
 const addButton = document.getElementById('add');
