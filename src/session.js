@@ -470,7 +470,28 @@ if (copyUrlBtn) {
   copyUrlBtn.addEventListener('click', async () => {
     try {
       const url = window.location.href;
-      await navigator.clipboard.writeText(url);
+      
+      // Try using the modern Clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // Fallback for browsers that don't support Clipboard API or insecure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+      
       const originalText = copyUrlBtn.textContent;
       copyUrlBtn.textContent = '✓ Copied!';
       copyUrlBtn.disabled = true;

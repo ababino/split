@@ -91,7 +91,27 @@ function getSessionStatus(session) {
 // Copy URL to clipboard
 async function copyToClipboard(text, button) {
   try {
-    await navigator.clipboard.writeText(text);
+    // Try using the modern Clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for browsers that don't support Clipboard API or insecure contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+    
     const originalText = button.textContent;
     button.textContent = '✓ Copied!';
     button.disabled = true;
