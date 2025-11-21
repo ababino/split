@@ -1,6 +1,8 @@
 ## Split Budget
 
-Simple, zero-backend web app to split a shared budget among friends and compute a minimal set of transfers to settle up.
+Simple web app to split a shared budget among friends and compute a minimal set of transfers to settle up.
+
+Now with **collaborative sessions** - create shareable sessions that multiple people can access and edit in real-time!
 
 ### Quick start
 
@@ -28,6 +30,9 @@ This project includes an optional, minimal login screen enforced by a tiny Expre
   - `LOGIN_PASSWORD`: Password required to sign in (default: `password`)
   - `SESSION_SECRET`: Secret used to sign the auth cookie (default: `dev-secret-change`)
   - `PORT` (optional): Server port (default `5173`)
+  - `DEFAULT_SESSION_DURATION_HOURS`: Default expiration time for new sessions (default: `24`)
+  - `MAX_SESSION_DURATION_HOURS`: Maximum session duration limit (default: `168` = 7 days)
+  - `SESSION_CLEANUP_INTERVAL_HOURS`: How often to clean up expired sessions (default: `1`)
 
 - **Run locally WITHOUT authentication**:
 
@@ -46,20 +51,32 @@ npm run dev
 
 Then open `http://localhost:5173` and log in. If env vars are not provided, the server defaults to `admin` / `password` (development only) and `SESSION_SECRET=dev-secret-change`.
 
-- **Public routes**: `/login.html`, `/src/login.js`
-- **Auth API**:
-  - `POST /api/login` with JSON body `{ "username": "...", "password": "..." }`
-    - On success: `204 No Content` + sets a signed cookie
-    - On failure: `401 { error: "invalid_credentials" }`
-  - `POST /api/logout` → `204 No Content` and clears cookie
-- **Protected content**: All other paths (including `/`) require the auth cookie and will redirect to `/login.html` if not authenticated.
+- **Public routes**: `/login.html`, `/src/login.js`, `/session/:sessionId`
+- **Protected content**: All other paths (including `/` and `/sessions`) require the auth cookie and will redirect to `/login.html` if not authenticated.
 
-### Usage
+### Features
 
+#### Basic Split Calculation
 - **Add participant**: Click the Add participant button to add a row.
 - **Enter amounts**: Fill in each participant's name and the amount they paid.
 - **Remove**: Click Remove to delete a row.
 - **Calculate**: Click Calculate to see who should pay whom and how much.
+
+#### Collaborative Sessions (New!)
+Create shareable budget sessions that anyone can access without authentication:
+
+- **Create Session**: Authenticated users can create a new session which generates a unique shareable URL
+- **Share & Collaborate**: Share the session URL with friends - they can view and edit without logging in
+- **Real-time Updates**: Changes are automatically synced every 5 seconds
+- **Session Management**: View, enable/disable, extend, or delete your sessions
+- **Time-Limited Access**: Sessions automatically expire after a configurable duration (default: 24 hours)
+
+**How to use sessions:**
+1. Log in to the application
+2. Click "Create Session" to generate a shareable URL
+3. Copy and share the URL with your group
+4. Everyone can add expenses and calculate splits together
+5. Manage all your sessions from the "My Sessions" page
 
 ### Development
 
@@ -174,6 +191,113 @@ See `test/TEST_REPORT.md` for detailed test documentation.
 ├─ PHASE6_IMPLEMENTATION.md    # Phase 6 testing summary
 └─ README.md                   # This file
 ```
+
+### Usage Examples
+
+#### Creating and sharing a session
+
+```bash
+# 1. Create a new session (requires authentication)
+curl -X POST http://localhost:5173/api/sessions \
+  -H "Content-Type: application/json" \
+  -b "auth=s%3Aok..." \
+  -d '{"expirationHours": 48}'
+
+# Response:
+# {
+#   "sessionId": "abc123xyz",
+#   "url": "http://localhost:5173/session/abc123xyz",
+#   "expiresAt": 1700000000000
+# }
+
+# 2. Share the URL with your group - no authentication needed!
+# They can access: http://localhost:5173/session/abc123xyz
+
+# 3. Anyone with the URL can update the session
+curl -X PUT http://localhost:5173/api/sessions/abc123xyz/data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "participants": [
+      {"name": "Alice", "amount": 45.50},
+      {"name": "Bob", "amount": 30.00},
+      {"name": "Charlie", "amount": 24.50}
+    ]
+  }'
+
+# 4. Extend the session (requires authentication, owner only)
+curl -X PATCH http://localhost:5173/api/sessions/abc123xyz \
+  -H "Content-Type: application/json" \
+  -b "auth=s%3Aok..." \
+  -d '{"extendHours": 24}'
+```
+
+#### Managing sessions
+
+```bash
+# List all your sessions
+curl http://localhost:5173/api/sessions \
+  -b "auth=s%3Aok..."
+
+# Disable a session
+curl -X PATCH http://localhost:5173/api/sessions/abc123xyz \
+  -H "Content-Type: application/json" \
+  -b "auth=s%3Aok..." \
+  -d '{"isActive": false}'
+
+# Delete a session
+curl -X DELETE http://localhost:5173/api/sessions/abc123xyz \
+  -b "auth=s%3Aok..."
+```
+
+### API Documentation
+
+The application provides a REST API for session management:
+
+#### Authentication Endpoints
+
+- **POST `/api/login`** - Authenticate user
+  - Body: `{ "username": "...", "password": "..." }`
+  - Response: `204 No Content` + sets auth cookie
+  - Error: `401 { error: "invalid_credentials" }`
+
+- **POST `/api/logout`** - Logout user
+  - Response: `204 No Content`
+
+- **GET `/api/auth/status`** - Check authentication status
+  - Response: `{ "authenticated": boolean }`
+
+#### Session Management Endpoints (Protected)
+
+These endpoints require authentication via the auth cookie:
+
+- **POST `/api/sessions`** - Create a new session
+  - Body (optional): `{ "name": "Session Name", "expirationHours": 24 }`
+  - Response: `201 { "sessionId": "...", "url": "...", "expiresAt": timestamp }`
+
+- **GET `/api/sessions`** - List all user's sessions
+  - Response: `{ "sessions": [{ id, name, createdAt, expiresAt, isActive, url, ... }] }`
+
+- **PATCH `/api/sessions/:sessionId`** - Update session status or expiration
+  - Body: `{ "isActive": boolean, "extendHours": number }`
+  - Response: `{ "session": {...} }`
+  - Errors: `404` session not found, `403` forbidden
+
+- **DELETE `/api/sessions/:sessionId`** - Delete a session
+  - Response: `204 No Content`
+  - Error: `404` session not found or forbidden
+
+#### Public Session Endpoints (No Authentication)
+
+These endpoints are publicly accessible for session collaboration:
+
+- **GET `/api/sessions/:sessionId/data`** - Get session data
+  - Response: `{ "sessionId": "...", "name": "...", "expiresAt": timestamp, "data": {...} }`
+  - Error: `404` if session doesn't exist, is expired, or is disabled
+
+- **PUT `/api/sessions/:sessionId/data`** - Update session data
+  - Body: `{ "participants": [{ "name": "...", "amount": number }] }`
+  - Response: `{ "sessionId": "...", "data": {...} }`
+  - Errors: `400` invalid data, `404` session not accessible
 
 ### How it works (algorithm)
 

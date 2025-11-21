@@ -8,6 +8,21 @@ const createSessionBtn = document.getElementById('create-session-btn');
 
 let sessions = [];
 
+// Toast notification helper
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
+
 // Navigate back to home
 if (homeBtn) {
   homeBtn.addEventListener('click', () => {
@@ -80,13 +95,14 @@ async function copyToClipboard(text, button) {
     const originalText = button.textContent;
     button.textContent = '✓ Copied!';
     button.disabled = true;
+    showToast('Session URL copied to clipboard!', 'success');
     setTimeout(() => {
       button.textContent = originalText;
       button.disabled = false;
     }, 2000);
   } catch (error) {
     console.error('Failed to copy:', error);
-    alert('Failed to copy URL. Please copy manually.');
+    showToast('Failed to copy URL. Please copy manually.', 'error');
   }
 }
 
@@ -283,12 +299,16 @@ async function createSession() {
     // Reload sessions to show the new one
     await loadSessions();
     
+    // Show success message
+    showToast('Session created successfully!', 'success');
+    
     // Scroll to top to show the new session
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
   } catch (error) {
     console.error('Error creating session:', error);
     showError('Failed to create session. Please try again.');
+    showToast('Failed to create session', 'error');
   } finally {
     createSessionBtn.disabled = false;
     createSessionBtn.textContent = '+ Create New Session';
@@ -313,10 +333,12 @@ async function toggleSessionStatus(sessionId, isActive) {
     if (session) {
       session.isActive = isActive;
       renderSessions();
+      showToast(`Session ${isActive ? 'enabled' : 'disabled'} successfully`, 'success');
     }
   } catch (error) {
     console.error('Error toggling session:', error);
     showError('Failed to update session status. Please try again.');
+    showToast('Failed to update session status', 'error');
   }
 }
 
@@ -337,13 +359,15 @@ async function extendSession(sessionId) {
     
     // Update local data
     const session = sessions.find(s => s.id === sessionId);
-    if (session && data.expiresAt) {
-      session.expiresAt = data.expiresAt;
+    if (session && data.session && data.session.expiresAt) {
+      session.expiresAt = data.session.expiresAt;
       renderSessions();
+      showToast('Session extended by 24 hours', 'success');
     }
   } catch (error) {
     console.error('Error extending session:', error);
     showError('Failed to extend session. Please try again.');
+    showToast('Failed to extend session', 'error');
   }
 }
 
@@ -365,9 +389,11 @@ async function deleteSession(sessionId) {
     // Remove from local data
     sessions = sessions.filter(s => s.id !== sessionId);
     renderSessions();
+    showToast('Session deleted successfully', 'success');
   } catch (error) {
     console.error('Error deleting session:', error);
     showError('Failed to delete session. Please try again.');
+    showToast('Failed to delete session', 'error');
   }
 }
 

@@ -14,12 +14,28 @@ const rowsContainer = document.getElementById('rows');
 const addButton = document.getElementById('add');
 const calculateButton = document.getElementById('calculate');
 const resultsContainer = document.getElementById('results');
+const copyUrlBtn = document.getElementById('copy-url-btn');
 
 let sessionData = null;
 let isReadOnly = false;
 let saveTimeout = null;
 let pollInterval = null;
 let lastSaveHash = null;
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
 
 // Show error banner
 function showError(title, message) {
@@ -242,6 +258,7 @@ async function saveSession() {
   } catch (error) {
     console.error('Error saving session:', error);
     updateSaveStatus('error', 'Save failed');
+    showToast('Failed to save changes', 'error');
   }
 }
 
@@ -326,6 +343,7 @@ async function pollForUpdates() {
           'Session No Longer Available',
           'This session has been deleted or disabled by the owner.'
         );
+        showToast('Session is no longer available', 'error');
       }
       return;
     }
@@ -446,6 +464,26 @@ if (addButton) {
 
 if (calculateButton) {
   calculateButton.addEventListener('click', calculateResults);
+}
+
+if (copyUrlBtn) {
+  copyUrlBtn.addEventListener('click', async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      const originalText = copyUrlBtn.textContent;
+      copyUrlBtn.textContent = '✓ Copied!';
+      copyUrlBtn.disabled = true;
+      showToast('Session URL copied to clipboard!', 'success');
+      setTimeout(() => {
+        copyUrlBtn.textContent = originalText;
+        copyUrlBtn.disabled = false;
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      showToast('Failed to copy URL', 'error');
+    }
+  });
 }
 
 // Initialize

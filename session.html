@@ -174,6 +174,54 @@
       padding: 40px;
       color: #6b7280;
     }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      max-width: 400px;
+    }
+    .toast.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+    .toast.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+    .toast.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #3b82f6;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
     @media (prefers-color-scheme: dark) {
       .participants, #results {
         background: #1f2937;
@@ -186,11 +234,43 @@
         background: #374151;
       }
     }
-    @media (max-width: 480px) {
-      button { padding: 6px 8px; }
+    @media (max-width: 640px) {
+      .container {
+        padding: 16px;
+      }
+      button { 
+        padding: 8px 12px;
+        font-size: 14px;
+      }
       .session-info {
         flex-direction: column;
         gap: 8px;
+      }
+      .row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .row.header {
+        display: none;
+      }
+      .row > * {
+        width: 100%;
+      }
+      input[type="text"]::placeholder,
+      input[type="number"]::placeholder {
+        font-size: 14px;
+      }
+      .actions {
+        flex-direction: column;
+      }
+      .actions button {
+        width: 100%;
+      }
+      .toast {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
       }
     }
   </style>
@@ -209,6 +289,11 @@
           <div>Session: <span class="session-id" id="session-id"></span></div>
           <div id="session-status"></div>
           <div id="save-status" class="save-status"></div>
+        </div>
+        <div style="margin-top: 12px;">
+          <button id="copy-url-btn" class="secondary" style="background: #6b7280; border-color: #4b5563;">
+            📋 Copy Session URL
+          </button>
         </div>
       </div>
       
