@@ -10,20 +10,14 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
+    "better-sqlite3": "^11.10.0",
     "cookie-parser": "^1.4.6",
-    "express": "^4.18.2",
+    "express": "^4.18.3",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "serve": "^14.2.4",
     "supertest": "^6.3.4",
     "vitest": "^1.6.0"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.10.0",
-    "cookie-parser": "^1.4.6",
-    "express": "^4.18.3",
-    "uuid": "^9.0.1"
   }
 }

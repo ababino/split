@@ -73,7 +73,33 @@ Run a local server:
 npm run dev
 ```
 
+### Sessions Feature
+
+Create shareable split budget sessions with unique URLs that can be accessed without authentication. This allows teams to collaboratively add expenses and calculate settlements.
+
+**Key Features:**
+- 🔗 Create shareable session URLs
+- 👥 Collaborative editing without login
+- ⏱️ Time-limited access (configurable expiration)
+- 🔐 Session management dashboard for owners
+- 💾 Data persistence with SQLite
+
+**Configuration (Environment Variables):**
+- `DEFAULT_SESSION_DURATION_HOURS` - Default session duration (default: 24 hours)
+- `MAX_SESSION_DURATION_HOURS` - Maximum allowed duration (default: 168 hours / 7 days)
+- `SESSION_CLEANUP_INTERVAL_HOURS` - How often to cleanup expired sessions (default: 1 hour)
+- `DB_PATH` - Database file location (default: `database/split.db`)
+
+**Usage:**
+1. Log in to the application
+2. Click "Create Session" to generate a shareable URL
+3. Share the URL with collaborators
+4. Anyone with the URL can add participants and amounts
+5. Manage your sessions from the "My Sessions" page
+
 ### Testing
+
+Comprehensive test suite with 106 tests covering all functionality.
 
 Tests are written with Vitest and located in `test/`.
 
@@ -81,20 +107,72 @@ Tests are written with Vitest and located in `test/`.
 # Run tests once
 npm test
 
-# Watch mode
+# Watch mode (for development)
 npm run test:watch
 ```
+
+**Test Coverage:**
+- ✅ Database layer (CRUD operations)
+- ✅ API endpoints (REST API)
+- ✅ Authentication & authorization
+- ✅ Session expiration logic
+- ✅ Public and protected routes
+- ✅ Error handling
+- ✅ Edge cases
+
+**Test Files:**
+- `sessions.test.js` - Database operations (21 tests)
+- `sessions-api.test.js` - API endpoints (25 tests)
+- `sessions-expiration.test.js` - Expiration logic (12 tests)
+- `sessions-interaction.test.js` - Session interaction (23 tests)
+- `sessions-ui.test.js` - UI routing (13 tests)
+- `auth.test.js` - Authentication (7 tests)
+- `split.test.js` - Split calculation (3 tests)
+- `overlap.test.js` - Duplicate detection (1 test)
+- `responsive.test.js` - Responsive design (1 test)
+
+See `test/TEST_REPORT.md` for detailed test documentation.
 
 ### Project structure
 
 ```
 .
-├─ index.html          # Minimal UI and styles
+├─ index.html                  # Main application page
+├─ login.html                  # Login page
+├─ sessions.html               # Session management dashboard
+├─ session.html                # Individual session view (public)
+├─ server.js                   # Express server with API endpoints
+├─ package.json                # Dependencies and scripts
+├─ vitest.config.js            # Test configuration
 ├─ src/
-│  ├─ app.js          # UI wiring and event handlers
-│  └─ split.js        # Splitting + settlement algorithm
-└─ test/
-   └─ split.test.js   # Unit tests
+│  ├─ app.js                   # Main UI logic and event handlers
+│  ├─ login.js                 # Login page logic
+│  ├─ sessions.js              # Session management UI
+│  ├─ session.js               # Session view UI
+│  └─ split.js                 # Splitting + settlement algorithm
+├─ database/
+│  ├─ schema.sql               # SQLite database schema
+│  ├─ db.js                    # Database access layer
+│  └─ split.db                 # SQLite database file (created at runtime)
+├─ test/
+│  ├─ sessions.test.js         # Database CRUD tests
+│  ├─ sessions-api.test.js     # API endpoint tests
+│  ├─ sessions-expiration.test.js   # Expiration logic tests
+│  ├─ sessions-interaction.test.js  # Session interaction tests
+│  ├─ sessions-ui.test.js      # UI routing tests
+│  ├─ auth.test.js             # Authentication tests
+│  ├─ split.test.js            # Split calculation tests
+│  ├─ overlap.test.js          # Overlap detection tests
+│  ├─ responsive.test.js       # Responsive design tests
+│  └─ TEST_REPORT.md           # Comprehensive test documentation
+├─ feature_specs/
+│  └─ sessions.md              # Sessions feature specification
+├─ scripts/
+│  └─ install-systemd.sh       # Systemd installation script
+├─ PHASE2_IMPLEMENTATION.md    # Phase 1 & 2 implementation summary
+├─ PHASE5_IMPLEMENTATION.md    # Phase 5 implementation summary
+├─ PHASE6_IMPLEMENTATION.md    # Phase 6 testing summary
+└─ README.md                   # This file
 ```
 
 ### How it works (algorithm)
